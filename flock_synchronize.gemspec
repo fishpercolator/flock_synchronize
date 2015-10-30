@@ -6,6 +6,8 @@ require 'flock_synchronize/version'
 Gem::Specification.new do |spec|
   spec.name          = "flock_synchronize"
   spec.version       = FlockSynchronize::VERSION
+  spec.required_ruby_version = ">= 1.9.0"
+  spec.licenses      = ["MIT"]
   spec.authors       = ["Rich Daley"]
   spec.email         = ["rich@fishpercolator.co.uk"]
 
