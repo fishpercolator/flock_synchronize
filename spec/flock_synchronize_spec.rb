@@ -44,5 +44,28 @@ describe FlockSynchronize do
               end
           end.not_to output(expected).to_stdout_from_any_process
       end
+      
+      context 'timeout' do
+          it 'blocks if there are a pair of locks within the time limit' do
+              expect do
+                  Timeout::timeout 3 do
+                      FlockSynchronize.flock_synchronize("timeout_spec") do
+                          FlockSynchronize.flock_synchronize("timeout_spec", timeout: 2) { true }
+                      end
+                  end
+              end.to raise_error(Timeout::Error)
+          end
+              
+          it 'unlocks after the timeout' do
+              expect do
+                  Timeout::timeout 10 do
+                      FlockSynchronize.flock_synchronize("timeout_spec") do 
+                          sleep 3
+                          FlockSynchronize.flock_synchronize("timeout_spec", timeout: 2) { true }
+                      end
+                  end
+              end.not_to raise_error
+          end
+      end
   end
 end

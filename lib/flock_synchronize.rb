@@ -14,14 +14,30 @@ module FlockSynchronize
     #    some.code_that_needs(synchronizing)
     #  end
     #
-    # The optional locking_constant parameter allows you to specify a different
-    # constant than LOCK_EX. See the File.flock documentation for more info.
+    # Options available:
     #
-    def self.flock_synchronize(key, locking_constant=File::LOCK_EX)
+    #   locking_constant: use a different constant than LOCK_EX. See the
+    #                     File.flock documentation for more info.
+    #   timeout:          automatically unlock if the lock was created more
+    #                     this number of seconds ago
+    #
+    def self.flock_synchronize(key, options={})
+        # Previous versions took locking_constant as second param and now it's
+        # a hash
+        if !options.kind_of? Hash
+            options = {locking_constant: options}
+        end
+        options[:locking_constant] ||= File::LOCK_EX
+        
         filename = File.join(Dir.tmpdir, "#{key}.flock")
         begin
+            if options[:timeout]
+                if File.exists? filename and (Time.now - File.mtime(filename)) > options[:timeout]
+                    File.unlink filename
+                end
+            end
             File.open(filename, 'w') do |f|
-                f.flock(locking_constant)
+                f.flock(options[:locking_constant])
                 yield
             end
         ensure
